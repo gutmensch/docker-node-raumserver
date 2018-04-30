@@ -1,2 +1,2 @@
 #!/usr/bin/execlineb -P
-nginx -g 'pid /var/lib/nginx/nginx.pid; daemon off;'
+nginx -g "pid /tmp/nginx.pid; daemon off;"
