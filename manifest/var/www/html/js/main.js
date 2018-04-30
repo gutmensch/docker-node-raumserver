@@ -2,6 +2,7 @@
  * Object and functions related to raumserver (client)
  */
 window.raumfeld = new Object();
+window.raumfeld.node_api = true;
 window.raumfeld.raumserver = '/raumserver';
 window.raumfeld.zones = [];
 window.raumfeld.rooms = [];
@@ -36,27 +37,55 @@ function getRaumfeldRendererStatus() {
 }
 
 function updateRaumfeldZoneStatus(zoneData) {
-    if (Array.isArray(zoneData)) {
-        // extract rooms
-        zoneData.forEach(function(zone) {
-            zone["rooms"].forEach(function(newRoom) {
-                var alreadyFound = false;
-                window.raumfeld.rooms.forEach(function(activeRoom) {
-                    alreadyFound = activeRoom["UDN"] === newRoom["UDN"] ? true : alreadyFound;
+    // for old c++ raumserver
+    if (window.raumfeld.node_api === false) {
+        if (Array.isArray(zoneData)) {
+            // extract rooms
+            zoneData.forEach(function(zone) {
+                zone["rooms"].forEach(function(newRoom) {
+                    var alreadyFound = false;
+                    window.raumfeld.rooms.forEach(function(activeRoom) {
+                        alreadyFound = activeRoom["UDN"] === newRoom["UDN"] ? true : alreadyFound;
+                    });
+                    if (!alreadyFound) {
+                        newRoom["zoneUDN"] = zone["UDN"] !== "" ? zone["UDN"] : "none";
+                        newRoom["zoneName"] = zone["name"] !== "" ? zone["name"] : "none";
+                        window.raumfeld.rooms.push(newRoom);
+                    }
                 });
-                if (!alreadyFound) {
-                    newRoom["zoneUDN"] = zone["UDN"] !== "" ? zone["UDN"] : "none";
-                    newRoom["zoneName"] = zone["name"] !== "" ? zone["name"] : "none";
-                    window.raumfeld.rooms.push(newRoom);
-                }
             });
-        });
-        // delete zones with empty names due to no zone
-        zoneData.forEach(function(zone, i) {
-            if (zone["name"] === "")
-                zoneData.splice(i, 1);
-        });
-        window.raumfeld.zones = zoneData;
+            // delete zones with empty names due to no zone
+            zoneData.forEach(function(zone, i) {
+                if (zone["name"] === "")
+                    zoneData.splice(i, 1);
+            });
+            window.raumfeld.zones = zoneData;
+        }
+    } else {
+        // XXX: this looks buggy. too many objects in arrays?!
+	// last zone key contains our array of _all_ zones!
+	// ...and what about this $ object key -.-
+        if (Array.isArray(zoneData["data"]["zoneConfig"]["zones"][0]["zone"])) {
+            zoneData = zoneData["data"]["zoneConfig"]["zones"][0]["zone"];
+	    zoneDataConverted = {}
+            // extract rooms
+            zoneData.forEach(function(zone) {
+                zone["room"].forEach(function(newRoom) {
+                    var alreadyFound = false;
+                    window.raumfeld.rooms.forEach(function(activeRoom) {
+                        alreadyFound = activeRoom["udn"] === newRoom["$"]["udn"] ? true : alreadyFound;
+                    });
+                    if (!alreadyFound) {
+			roomConv["udn"] = newRoom["$"]["udn"];
+			roomConv["name"] = newRoom["$"]["name"];
+			roomConv["powerState"] = newRoom["$"]["powerState"];
+                        roomConv["zoneUDN"] = zone["$"]["udn"] !== "" ? zone["$"]["udn"] : "none";
+                        window.raumfeld.rooms.push(roomConv);
+                    }
+                });
+            });
+            window.raumfeld.zones = zoneDataConverted;
+        }
     }
 }
 
