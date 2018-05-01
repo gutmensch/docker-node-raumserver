@@ -2,7 +2,6 @@
  * Object and functions related to raumserver (client)
  */
 window.raumfeld = new Object();
-window.raumfeld.node_api = true;
 window.raumfeld.raumserver = '/raumserver';
 window.raumfeld.zones = [];
 window.raumfeld.rooms = [];
@@ -22,7 +21,7 @@ function getUrlParam(param) {
 function getZoneName(zoneId) {
     var name = "n/a";
     window.raumfeld.zones.forEach(function(zone){
-       if (zone["UDN"] === zoneId)
+       if (zone["udn"] === zoneId)
            name = zone["name"];
     });
     return name;
@@ -37,85 +36,71 @@ function getRaumfeldRendererStatus() {
 }
 
 function updateRaumfeldZoneStatus(zoneData) {
-    // for old c++ raumserver
-    if (window.raumfeld.node_api === false) {
-        if (Array.isArray(zoneData)) {
-            // extract rooms
-            zoneData.forEach(function(zone) {
-                zone["rooms"].forEach(function(newRoom) {
-                    var alreadyFound = false;
-                    window.raumfeld.rooms.forEach(function(activeRoom) {
-                        alreadyFound = activeRoom["UDN"] === newRoom["UDN"] ? true : alreadyFound;
-                    });
-                    if (!alreadyFound) {
-                        newRoom["zoneUDN"] = zone["UDN"] !== "" ? zone["UDN"] : "none";
-                        newRoom["zoneName"] = zone["name"] !== "" ? zone["name"] : "none";
-                        window.raumfeld.rooms.push(newRoom);
-                    }
+    // XXX: this looks buggy. too many objects in arrays?!
+    // last zone key contains our array of _all_ zones!
+    // ...and what about this $ object key -.-
+    if (Array.isArray(zoneData["data"]["zoneConfig"]["zones"][0]["zone"])) {
+        zoneData = zoneData["data"]["zoneConfig"]["zones"][0]["zone"];
+        // extract rooms
+        zoneData.forEach(function(zone) {
+            zone["room"].forEach(function(newRoom) {
+                var roomConv = {};
+                var alreadyFound = false;
+                window.raumfeld.rooms.forEach(function(activeRoom) {
+                    alreadyFound = activeRoom["udn"] === newRoom["$"]["udn"] ? true : alreadyFound;
                 });
+                if (!alreadyFound) {
+                    roomConv["udn"] = newRoom["$"]["udn"];
+                    roomConv["name"] = newRoom["$"]["name"];
+                    roomConv["powerState"] = newRoom["$"]["powerState"];
+                    roomConv["zoneUDN"] = zone["$"]["udn"] !== "" ? zone["$"]["udn"] : "none";
+                    window.raumfeld.rooms.push(roomConv);
+                }
             });
-            // delete zones with empty names due to no zone
-            zoneData.forEach(function(zone, i) {
-                if (zone["name"] === "")
-                    zoneData.splice(i, 1);
+            var roomsInZone = [];
+            window.raumfeld.rooms.forEach(function(room) {
+                if (room["zoneUDN"] === zone["$"]["udn"]) roomsInZone.push(room["name"]);
             });
-            window.raumfeld.zones = zoneData;
-        }
-    } else {
-        // XXX: this looks buggy. too many objects in arrays?!
-	// last zone key contains our array of _all_ zones!
-	// ...and what about this $ object key -.-
-        if (Array.isArray(zoneData["data"]["zoneConfig"]["zones"][0]["zone"])) {
-            zoneData = zoneData["data"]["zoneConfig"]["zones"][0]["zone"];
-	    zoneDataConverted = {}
-            // extract rooms
-            zoneData.forEach(function(zone) {
-                zone["room"].forEach(function(newRoom) {
-                    var alreadyFound = false;
-                    window.raumfeld.rooms.forEach(function(activeRoom) {
-                        alreadyFound = activeRoom["udn"] === newRoom["$"]["udn"] ? true : alreadyFound;
-                    });
-                    if (!alreadyFound) {
-			roomConv["udn"] = newRoom["$"]["udn"];
-			roomConv["name"] = newRoom["$"]["name"];
-			roomConv["powerState"] = newRoom["$"]["powerState"];
-                        roomConv["zoneUDN"] = zone["$"]["udn"] !== "" ? zone["$"]["udn"] : "none";
-                        window.raumfeld.rooms.push(roomConv);
-                    }
-                });
+            zone["name"] = roomsInZone.join(", ");
+            zone["udn"] = zone["$"]["udn"];
+            var alreadyFound = false;
+            window.raumfeld.zones.forEach(function(activeZone) {
+                alreadyFound = activeZone["udn"] === zone["udn"] ? true : alreadyFound;
             });
-            window.raumfeld.zones = zoneDataConverted;
-        }
+            if (!alreadyFound) window.raumfeld.zones.push(zone);
+        });
     }
 }
 
 function updateRaumfeldRendererStatus(rendererData) {
-    if (Array.isArray(rendererData)) {
+    if (Array.isArray(rendererData["data"])) {
         // for sake of simplicity we just add missing values to zones and roomsa
         // each room and zone should match values from the global vars
         // window.raumfeld.zones and window.raumfeld.rooms
-        rendererData.forEach(function(renderer) {
-            renderer["roomStates"].forEach(function(newRoom) {
-                window.raumfeld.rooms.forEach(function(activeRoom) {
-                    if (activeRoom["UDN"] === newRoom["roomUdn"]) {
-                        activeRoom["isMute"] = newRoom["isMute"];
-                        activeRoom["isOnline"] = newRoom["isOnline"];
-                        activeRoom["transportState"] = newRoom["transportState"];
-                        activeRoom["volume"] = newRoom["volume"];
-                    }
-                });
-            });
-            window.raumfeld.zones.forEach(function(activeZone) {
-                if (activeZone["UDN"] === renderer["udn"]) {
-                    Object.keys(renderer).forEach(function (key){
+        rendererData["data"].forEach(function(rendererZone) {
+            window.raumfeld.zones.forEach(function(activeZone, index, arr) {
+                if (activeZone["udn"] === rendererZone["udn"]) {
+                    Object.keys(rendererZone).forEach(function (key){
                         if (!activeZone.hasOwnProperty(key)) {
-                            activeZone[key] = renderer[key];
+                            arr[index][key] = rendererZone[key];
                         }
                     });
                 }
             });
+            rendererZone["rooms"].forEach(function(newRoom) {
+                window.raumfeld.rooms.forEach(function(activeRoom, index, arr) {
+                    // XXX: this is fishy, we sometimes get newRoom with the right udn without keys?!
+                    if (activeRoom["udn"] === newRoom["udn"]) {
+                        if (newRoom["Mute"]) arr[index]["Mute"] = newRoom["Mute"];
+                        if (newRoom["online"]) arr[index]["online"] = newRoom["online"];
+                        if (newRoom["TransportState"]) arr[index]["TransportState"] = newRoom["TransportState"];
+                        if (newRoom["Volume"]) arr[index]["Volume"] = newRoom["Volume"];
+                    }
+                });
+            });
         });
     }
+
 }
 
 function updateTitle(id, msg) {
@@ -335,7 +320,7 @@ function playerButton(awesomeIcon, raumfeldAction, raumfeldValues = {}) {
     button_style.setAttribute("style", "font-size:108%");
     var button_icon = document.createElement("i");
     button_icon.className = "fa " + awesomeIcon;
-    button_icon.setAttribute("onclick","javascript:queryRaumserver('/controller/"+raumfeldAction+"',"+ JSON.stringify(raumfeldValues) +")");
+    button_icon.setAttribute("onclick","queryRaumserver('/controller/"+raumfeldAction+"',"+ JSON.stringify(raumfeldValues) +")");
     button_style.appendChild(button_icon);
     button.appendChild(button_style);
     return button;
@@ -468,11 +453,11 @@ var AppRouter = Backbone.Router.extend({
         raumfeldRooms.forEach(function(room, i){
             var found = false;
             currentRooms.forEach(function(listedRoom) {
-                found = listedRoom.id === room["UDN"] ? true : found;
+                found = listedRoom.id === room["udn"] ? true : found;
             });
             if (!found) {
                 var pos = (0 === (raumfeldRooms.length - 1)) ? "single" : ((i === 0) ? "start" : (i === (raumfeldRooms.length - 1) ? "end" : "none"));
-                li = listEntry(room["name"], room["UDN"], pos, "?id=" + encodeURIComponent(room["UDN"]) + "#room");
+                li = listEntry(room["name"], room["udn"], pos, "?id=" + encodeURIComponent(room["udn"]) + "#room");
                 roomList.appendChild(li);
             }
         });
@@ -484,11 +469,11 @@ var AppRouter = Backbone.Router.extend({
         raumfeldZones.forEach(function(zone, i){
             var found = false;
             currentZones.forEach(function (listedZone) {
-                found = listedZone.id === zone["UDN"] ? true : found;
+                found = listedZone.id === zone["udn"] ? true : found;
             });
             if (!found) {
                 var pos = (0 === (raumfeldZones.length - 1)) ? "single" : ((i === 0) ? "start" : (i === (raumfeldZones.length - 1) ? "end" : "none"));
-                li = listEntry(zone["name"], zone["UDN"], pos, "?id=" + encodeURIComponent(zone["UDN"]) + "#zone");
+                li = listEntry(zone["name"], zone["udn"], pos, "?id=" + encodeURIComponent(zone["udn"]) + "#zone");
                 zoneList.appendChild(li);
             }
         });
@@ -526,21 +511,21 @@ var AppRouter = Backbone.Router.extend({
         raumfeldRooms.forEach(function(room){
             var found = false;
             currentRooms.forEach(function(listedRoom) {
-                found = listedRoom.id === room["UDN"] ? true : found;
+                found = listedRoom.id === room["udn"] ? true : found;
             });
             //if (!found) {
                 var params = {
-                    id: room["UDN"]
+                    id: room["udn"]
                 };
                 entry = tableEntry(
                     room["name"],
-                    room["UDN"],
+                    room["udn"],
                     room["online"],
                     room["zoneUDN"],
-                    room["isMute"],
-                    room["transportState"],
+                    room["Mute"],
+                    room["TransportState"],
                     zoneId,
-                    "javascript:queryRaumserver('/controller/toggleMute'," + JSON.stringify(params) + ")"
+                    "queryRaumserver('/controller/toggleMute'," + JSON.stringify(params) + ")"
                 );
                 tbody.appendChild(entry);
             //}
