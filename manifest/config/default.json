@@ -1,7 +1,7 @@
 {
     "raumserver": {
             "port" : 3000,
-            "loglevel" : 4 // 0=error, 1=warnings, 2=info, 3=verbose, 4=debug, 5=silly
+            "loglevel" : 2 // 0=error, 1=warnings, 2=info, 3=verbose, 4=debug, 5=silly
         },
     "raumfeld": {   
             "raumfeldHost"              : "0.0.0.0", // 0.0.0.0 = autodetect
