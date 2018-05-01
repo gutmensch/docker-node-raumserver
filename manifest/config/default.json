@@ -11,7 +11,7 @@
             "alivePingerIntervall"      : 2500,
             "ssdpDiscovertimeout"       : 5000,
             "bonjourDiscoverTimeout"    : 3000,
-            "uriMetaDataTemplateFile"   : "lib/setUriMetadata.template",
+            "uriMetaDataTemplateFile"   : "/node_modules/node-raumkernel/lib/setUriMetadata.template",
             "rendererStateTriggerConfirmationTimout": 3500,
             "zoneTriggerConfirmationTimout": 6000
         }
