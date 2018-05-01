@@ -15,37 +15,112 @@ This image now features a simple AJAX webclient. By default it should be availab
 
 ## Raumserver version and zone config
 ```
-$ curl docker:3535/raumserver/data/getVersion | python -mjson.tool
+$ curl docker:3535/raumserver/data/getVersion -s | python -mjson.tool
 {
-    "raumkernelLib": "1.0.2",
-    "raumserverLib": "1.0.2"
-}
-$ curl docker:3535/raumserver/data/getZoneConfig | python -mjson.tool
-[
-    {
-        "UDN": "uuid:92A8D729-D665-4D13-8E63-B0994E4BDB84",
-        "name": "Bad, Kueche",
-        "rooms": [
-            {
-                "UDN": "uuid:cddc2453-8f96-4ece-9c9e-791212003367",
-                "color": "#CC0000",
-                "name": "Bad",
-                "online": true
-            },
-            {
-                "UDN": "uuid:d6b7fbad-b9bc-4bc2-add3-49c3104e0b80",
-                "color": "#CC0000",
-                "name": "Kueche",
-                "online": true
-            }
-        ]
+    "action": "getVersion",
+    "data": {
+        "raumkernelLib": "1.2.21",
+        "raumserverLib": "0.1.4"
     },
-    {
-        "UDN": "",
-        "name": "",
-        "rooms": []
-    }
-]
+    "error": false,
+    "msg": "",
+    "requestUrl": "/raumserver/data/getVersion"
+}
+$ curl docker:3535/raumserver/data/getZoneConfig -s | python -mjson.tool
+{
+    "action": "getZoneConfig",
+    "data": {
+        "zoneConfig": {
+            "$": {
+                "numRooms": "4",
+                "spotifyMode": "singleRoom"
+            },
+            "zones": [
+                {
+                    "zone": [
+                        {
+                            "$": {
+                                "udn": "uuid:7310357F-C81B-44D2-AF2B-B1BACC9803B9"
+                            },
+                            "room": [
+                                {
+                                    "$": {
+                                        "name": "Wohnzimmer",
+                                        "powerState": "AUTOMATIC_STANDBY",
+                                        "udn": "uuid:b1e1694c-cda7-403d-a671-8d7266ec0f30"
+                                    },
+                                    "renderer": [
+                                        {
+                                            "$": {
+                                                "name": "Connector Wohnzimmer",
+                                                "udn": "uuid:f6030ad8-b400-4e2e-a260-f79580ff68f7"
+                                            }
+                                        }
+                                    ]
+                                }
+                            ]
+                        },
+                        {
+                            "$": {
+                                "udn": "uuid:C43C1A1D-AED1-472B-B0D0-210B7925000E"
+                            },
+                            "room": [
+                                {
+                                    "$": {
+                                        "name": "Bad",
+                                        "powerState": "AUTOMATIC_STANDBY",
+                                        "udn": "uuid:48459864-dce8-42cf-a483-d64734881798"
+                                    },
+                                    "renderer": [
+                                        {
+                                            "$": {
+                                                "name": "Speaker Bad",
+                                                "udn": "uuid:635fafa2-1d5b-4f2e-9fc2-671a866520dd"
+                                            }
+                                        }
+                                    ]
+                                },
+                                {
+                                    "$": {
+                                        "name": "Schlafzimmer",
+                                        "powerState": "AUTOMATIC_STANDBY",
+                                        "udn": "uuid:5d366950-69f4-4534-8ca4-1b18b7dd00db"
+                                    },
+                                    "renderer": [
+                                        {
+                                            "$": {
+                                                "name": "Speaker Schlafzimmer",
+                                                "udn": "uuid:183bd2ad-e56a-4843-b0f9-dd19db6fd066"
+                                            }
+                                        }
+                                    ]
+                                },
+                                {
+                                    "$": {
+                                        "name": "Kueche",
+                                        "powerState": "AUTOMATIC_STANDBY",
+                                        "udn": "uuid:8dd0aac7-ecb0-44cb-a3b9-91548c1e88f9"
+                                    },
+                                    "renderer": [
+                                        {
+                                            "$": {
+                                                "name": "Speaker Kueche",
+                                                "udn": "uuid:2c09e94e-34b8-45e0-8dca-2a5b162a6984"
+                                            }
+                                        }
+                                    ]
+                                }
+                            ]
+                        }
+                    ]
+                }
+            ]
+        }
+    },
+    "error": false,
+    "msg": "",
+    "requestUrl": "/raumserver/data/getZoneConfig"
+}
 ```
 
 ## Command reference
