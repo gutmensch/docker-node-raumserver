@@ -17,7 +17,7 @@ RUN set -x \
 
 COPY ./manifest/ .
 
-# XXX: patch for broken template path
+# XXX: patch for broken template path. lots of trailing whitespace and windows line feeds, yummy.
 RUN set -x \
     && cd /node_modules \
     && patch -p1 < /config/setUriMetadata_fix_path.patch
