@@ -6,11 +6,12 @@ window.raumfeld.raumserver = '/raumserver';
 window.raumfeld.zones = [];
 window.raumfeld.rooms = [];
 window.raumfeld.sources = [
-    {"type": "Uri", "name": "MPD", "value": "http://qnap:8800"},
-    {"type": "Playlist", "name": "The Blitz", "value": "TheBlitz"},
+    {"type": "Uri", "name": "MPD", "value": "http://qnaps:8800"},
     {"type": "Uri", "name": "Rock Antenne Alternative", "value": "http://mp3channels.webradio.rockantenne.de/alternative"},
     {"type": "Uri", "name": "StarFM", "value": "http://85.25.209.152:80/berlin.mp3"},
-    {"type": "Uri", "name": "Berliner Rundfunk", "value": "http://stream.berliner-rundfunk.de/brf/mp3-128/internetradio"}
+    {"type": "Uri", "name": "Berliner Rundfunk", "value": "http://stream.berliner-rundfunk.de/brf/mp3-128/internetradio"},
+    {"type": "Uri", "name": "Radio 21", "value": "http://188.94.97.91/radio21.mp3"},
+    {"type": "Uri", "name": "Oldies but Goldies", "value": "http://mp3channels.webradio.antenne.de/oldies-but-goldies"}
 ];
 
 function getUrlParam(param) {
