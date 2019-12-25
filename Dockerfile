@@ -22,7 +22,7 @@ RUN set -x \
     && cd /node_modules \
     && patch -p1 < /config/setUriMetadata_fix_path.patch
 
-EXPOSE 3000 3535
+EXPOSE 3535
 
 ENTRYPOINT ["/init"]
 
